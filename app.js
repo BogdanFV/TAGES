@@ -1,4 +1,10 @@
-const fetchData =  async (url) => {
+
+const express = require('express');
+
+const app = express();
+const port = 3000;
+
+const fetchData = async (url) => {
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -7,8 +13,8 @@ const fetchData =  async (url) => {
     console.error(`Error fetching data from ${url}: ${error.message}`);
     return null;
   }
-}
-//фетч комментариев
+};
+
 const getCommentsForPost = async (postId) => {
   try {
     const commentsUrl = `http://jsonplaceholder.typicode.com/posts/${postId}/comments`;
@@ -16,9 +22,8 @@ const getCommentsForPost = async (postId) => {
   } catch (error) {
     console.error('An error occurred:', error);
   }
-}
+};
 
-//фетч пользователей
 const formatUser = (user) => {
   return {
     id: user.id,
@@ -28,9 +33,8 @@ const formatUser = (user) => {
     website: `https://${user.website}`,
     company: user.company.name,
   };
-}
+};
 
-//фетч постов
 const formatPost = (post, user, userErvin, postComments) => {
   if (user === userErvin) {
     return {
@@ -49,7 +53,7 @@ const formatPost = (post, user, userErvin, postComments) => {
     };
 }
 
-//объединение в общий массив
+
 const getUsersWithPosts = async () => {
   try {
     const usersUrl = 'http://jsonplaceholder.typicode.com/users';
@@ -78,11 +82,27 @@ const getUsersWithPosts = async () => {
         posts: userPosts.map(post => formatPost(post, user, userErvin, postComments)),
       };
     });
-    console.log(result);
+    console.dir(result, { depth: null });
+    // console.log(result);
     return result;
   } catch (error) {
     console.error('An error occurred:', error);
   }
 }
 
-getUsersWithPosts();
+app.get('/', async (req, res) => {
+  try {
+    const usersWithPosts = await getUsersWithPosts();
+    res.json(usersWithPosts);
+    console.dir(usersWithPosts, { depth: null });
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.listen(port, async () => {
+  console.log(`Server is running on port ${port}`);
+  
+  const usersWithPosts = await getUsersWithPosts();
+  console.dir(usersWithPosts, { depth: null });
+});
